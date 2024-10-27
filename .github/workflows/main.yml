@@ -1,0 +1,57 @@
+
+name: ruting
+
+# Controls when the workflow will run
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+  # Triggers the workflow on a schedule (once a day at 5 AM Spain time)
+  schedule:
+    - cron: '0 6 * * 1-5'  # 5 AM UTC corresponds to 7 AM CEST (Spain time during daylight saving)
+                           # 6 AM UTC corresponds to 7 AM CEST (Spain time during winter)
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout repo content
+        uses: actions/checkout@v3 # checkout the repository content to github runner.
+        
+      - name: setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+          
+      - name: Install dependencies
+        run: |
+            python -m pip install --upgrade pip
+            python -m pip install googlemaps
+            
+      - name: execute py script # run file
+        env:
+          GM_KEY: ${{ secrets.GM_KEY }}
+          ORIGIN: ${{ secrets.ORIGIN }}
+          DESTINY: ${{ secrets.DESTINY }}
+          WAY1: ${{ secrets.WAY1 }}
+          WAY2: ${{ secrets.WAY2 }}
+          WAY3: ${{ secrets.WAY3 }}
+          WAY4: ${{ secrets.WAY4 }}
+          WAY5: ${{ secrets.WAY5 }}
+        run: |
+          python ./test.py
+          
+      - name: Configure Git
+        run: |
+          git config --global user.name "Your GitHub Actions Bot"
+          git config --global user.email "bot@example.com"
+
+      - name: Commit and push changes
+        run: |
+          git add log_*.csv
+          git commit -m "Add log file for $(date +'%Y-%m-%d')"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
